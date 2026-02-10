@@ -58,12 +58,14 @@ export function SystemStatusWidget({ status }: SystemStatusWidgetProps) {
         <div className="flex items-center justify-between rounded-xl border border-primary-200 bg-primary-100/50 px-3 py-2.5">
           <span className="text-primary-700 text-pretty">Uptime</span>
           <span className="font-medium text-ink tabular-nums">
-            {formatUptime(status.uptimeSeconds)}
+            {status.uptimeSeconds > 0 ? formatUptime(status.uptimeSeconds) : '—'}
           </span>
         </div>
         <div className="flex items-center justify-between rounded-xl border border-primary-200 bg-primary-100/50 px-3 py-2.5">
           <span className="text-primary-700 text-pretty">Current model</span>
-          <span className="font-medium text-ink tabular-nums">{status.currentModel}</span>
+          <span className="font-medium text-ink tabular-nums">
+            {status.currentModel === 'sonnet' ? 'Default (Sonnet)' : status.currentModel || '—'}
+          </span>
         </div>
         <div className="flex items-center justify-between rounded-xl border border-primary-200 bg-primary-100/50 px-3 py-2.5">
           <span className="text-primary-700 text-pretty">Session count</span>
@@ -78,7 +80,8 @@ export function SystemStatusWidget({ status }: SystemStatusWidgetProps) {
           variant="outline"
           size="sm"
           onClick={handleOpenDebugConsole}
-          className="h-8 px-3 text-xs tabular-nums"
+          className="h-8 px-3 text-xs tabular-nums focus:ring-2 focus:ring-primary-400 focus:ring-offset-1"
+          aria-label="Open Debug Console"
         >
           Open Debug Console
         </Button>

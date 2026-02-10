@@ -188,12 +188,23 @@ export function DashboardScreen() {
               <span>Studio Overview</span>
             </div>
             <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm">
+              <Button
+                variant="outline"
+                size="sm"
+                disabled
+                title="Layout customization coming soon"
+                aria-label="Reset Layout — coming soon"
+              >
                 Reset Layout
               </Button>
-              <Button size="sm">
+              <Button
+                size="sm"
+                disabled
+                title="Widget picker coming soon"
+                aria-label="Add Widget — coming soon"
+              >
                 <HugeiconsIcon icon={Add01Icon} size={20} strokeWidth={1.5} />
-                <span>+ Add Widget</span>
+                <span>Add Widget</span>
               </Button>
             </div>
           </div>

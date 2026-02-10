@@ -45,6 +45,10 @@ function toWeatherEmoji(condition: string): string {
   return '☀️'
 }
 
+function cToF(c: number): number {
+  return Math.round((c * 9) / 5 + 32)
+}
+
 function toNumber(value: unknown): number {
   if (typeof value === 'number' && Number.isFinite(value)) return value
   if (typeof value === 'string') {
@@ -153,7 +157,7 @@ export function WeatherWidget() {
             </p>
           </div>
           <p className="shrink-0 text-lg font-medium text-ink tabular-nums">
-            {weather.emoji} {weather.temperatureC}C
+            {weather.emoji} {cToF(weather.temperatureC)}°F
           </p>
         </div>
       </div>
@@ -169,7 +173,7 @@ export function WeatherWidget() {
                 {day.emoji}
               </p>
               <p className="mt-1 text-[11px] text-primary-700 tabular-nums">
-                {day.highC}C/{day.lowC}C
+                {cToF(day.highC)}°/{cToF(day.lowC)}°F
               </p>
             </div>
           )

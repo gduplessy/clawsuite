@@ -26,7 +26,8 @@ export function QuickActionsWidget({
             <Button
               key={action.id}
               variant="secondary"
-              className="h-auto min-h-16 items-start justify-start rounded-xl border border-primary-200 bg-primary-100/55 px-3 py-3 text-left hover:bg-primary-100"
+              className="h-auto min-h-16 items-start justify-start rounded-xl border border-primary-200 bg-primary-100/55 px-3 py-3 text-left hover:bg-primary-100 focus:ring-2 focus:ring-primary-400 focus:ring-offset-1"
+              aria-label={action.label}
               onClick={function onActionClick() {
                 onNavigate(action.to)
               }}

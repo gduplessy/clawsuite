@@ -24,6 +24,8 @@ export function DashboardGlassCard({
 }: DashboardGlassCardProps) {
   return (
     <article
+      role="region"
+      aria-label={title}
       className={cn(
         'group rounded-2xl border border-primary-200 bg-primary-50/85 p-4 shadow-sm backdrop-blur-xl transition-all duration-200 hover:-translate-y-0.5 hover:border-primary-300 hover:bg-primary-50/95 hover:shadow-md md:p-5',
         className,
