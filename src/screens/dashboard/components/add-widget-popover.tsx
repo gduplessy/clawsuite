@@ -36,8 +36,9 @@ export function AddWidgetPopover({ visibleIds, onAdd }: AddWidgetPopoverProps) {
         type="button"
         onClick={() => setOpen(!open)}
         className="inline-flex size-7 items-center justify-center rounded-md text-primary-400 transition-colors hover:text-primary-700 dark:hover:text-primary-300"
-        aria-label="Add Widget"
-        title="Add Widget"
+        aria-label="Widgets"
+        title="Widgets"
+        disabled={hiddenWidgets.length === 0}
       >
         <HugeiconsIcon icon={Add01Icon} size={15} strokeWidth={1.5} />
       </button>
@@ -48,7 +49,7 @@ export function AddWidgetPopover({ visibleIds, onAdd }: AddWidgetPopoverProps) {
           className="absolute right-0 top-full z-[9999] mt-2 w-64 rounded-xl border border-primary-200 bg-primary-50 p-3 shadow-xl backdrop-blur-xl dark:bg-primary-100"
         >
           <div className="mb-2 flex items-center justify-between">
-            <h3 className="text-xs font-medium uppercase tracking-wide text-primary-500">Add Widget</h3>
+            <h3 className="text-xs font-medium uppercase tracking-wide text-primary-500">Widgets</h3>
             <button
               type="button"
               onClick={() => setOpen(false)}

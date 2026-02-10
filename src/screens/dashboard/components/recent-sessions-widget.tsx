@@ -1,4 +1,5 @@
-import { Clock01Icon } from '@hugeicons/core-free-icons'
+import { Clock01Icon, ArrowRight01Icon } from '@hugeicons/core-free-icons'
+import { HugeiconsIcon } from '@hugeicons/react'
 import { DashboardGlassCard } from './dashboard-glass-card'
 import type { RecentSession } from './dashboard-types'
 import { Button } from '@/components/ui/button'
@@ -43,7 +44,7 @@ export function RecentSessionsWidget({
             <Button
               key={session.friendlyId}
               variant="outline"
-              className="h-auto w-full flex-col items-start rounded-xl border-primary-200 bg-primary-50/80 px-3 py-2.5 hover:bg-primary-100/70"
+              className="group h-auto w-full flex-col items-start rounded-xl border-primary-200 bg-primary-50/80 px-3 py-2.5 transition-colors hover:bg-primary-100/70"
               onClick={function onSessionClick() {
                 onOpenSession(session.friendlyId)
               }}
@@ -52,8 +53,11 @@ export function RecentSessionsWidget({
                 <span className="line-clamp-1 text-sm font-medium text-ink text-balance">
                   {session.title}
                 </span>
-                <span className="shrink-0 text-[11px] text-primary-600 tabular-nums">
-                  {formatSessionTimestamp(session.updatedAt)}
+                <span className="flex shrink-0 items-center gap-1">
+                  <span className="text-[11px] text-primary-600 tabular-nums">
+                    {formatSessionTimestamp(session.updatedAt)}
+                  </span>
+                  <HugeiconsIcon icon={ArrowRight01Icon} size={12} strokeWidth={1.5} className="text-primary-300 opacity-0 transition-opacity group-hover:opacity-100" />
                 </span>
               </div>
               <p className="mt-1 line-clamp-2 w-full text-left text-xs text-primary-600 text-pretty">

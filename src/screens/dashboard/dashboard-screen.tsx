@@ -1,6 +1,7 @@
 import {
   RefreshIcon,
   Settings01Icon,
+  ArrowDown01Icon,
 } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { OpenClawStudioIcon } from '@/components/icons/openclaw-studio'
@@ -135,6 +136,55 @@ function toSessionUpdatedAt(session: SessionMeta): number {
   return 0
 }
 
+/* ── Mode Selector (Dashboard / Workspace) ── */
+function ModeSelector({ navigate }: { navigate: ReturnType<typeof useNavigate> }) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!open) return
+    function handleClick(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [open])
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        type="button"
+        onClick={() => setOpen(!open)}
+        className="inline-flex items-center gap-1 rounded-md border border-primary-200 bg-primary-50 px-2 py-0.5 text-[11px] font-medium text-primary-600 transition-colors hover:border-primary-300 hover:text-ink dark:border-primary-300 dark:bg-transparent dark:hover:text-primary-200"
+      >
+        Dashboard
+        <HugeiconsIcon icon={ArrowDown01Icon} size={12} strokeWidth={1.5} />
+      </button>
+      {open ? (
+        <div className="absolute left-0 top-full z-[9999] mt-1 w-36 rounded-lg border border-primary-200 bg-primary-50 py-1 shadow-lg dark:bg-primary-100">
+          <button
+            type="button"
+            className="w-full px-3 py-1.5 text-left text-xs font-medium text-ink"
+            onClick={() => setOpen(false)}
+          >
+            Dashboard
+          </button>
+          <button
+            type="button"
+            className="w-full px-3 py-1.5 text-left text-xs text-primary-600 hover:text-ink"
+            onClick={() => {
+              setOpen(false)
+              navigate({ to: '/chat/$sessionKey', params: { sessionKey: 'main' } })
+            }}
+          >
+            Workspace
+          </button>
+        </div>
+      ) : null}
+    </div>
+  )
+}
+
 export function DashboardScreen() {
   const navigate = useNavigate()
   const [gridLayouts, setGridLayouts] = useState<ResponsiveLayouts>(loadLayouts)
@@ -242,8 +292,8 @@ export function DashboardScreen() {
       <section className="mx-auto w-full max-w-[1600px]">
         <header className="relative z-20 mb-4 rounded-lg border border-primary-200 bg-primary-50/90 px-4 py-2.5 md:mb-5 md:px-5">
           <div className="flex items-center justify-between gap-4">
-            {/* LEFT — Logo + vertical title block */}
-            <div className="flex items-start gap-3">
+            {/* LEFT — Logo + title + mode selector */}
+            <div className="flex items-center gap-3">
               <OpenClawStudioIcon className="mt-0.5 size-7 shrink-0 rounded-lg" />
               <div className="flex flex-col leading-tight">
                 <h1 className="text-sm font-semibold text-ink">
@@ -258,12 +308,14 @@ export function DashboardScreen() {
                   <span className="text-primary-500">{systemStatus.currentModel || '—'}</span>
                 </p>
               </div>
+              <ModeSelector navigate={navigate} />
             </div>
 
-            {/* RIGHT — time/weather + icons + Workspace CTA */}
-            <div className="flex items-center gap-3">
+            {/* RIGHT — time/weather … widgets/icons */}
+            <div className="flex items-center gap-4">
               <HeaderAmbientStatus />
               <div className="flex items-center gap-1">
+                <AddWidgetPopover visibleIds={visibleIds} onAdd={addWidget} />
                 <ThemeToggle />
                 <button
                   type="button"
@@ -284,34 +336,6 @@ export function DashboardScreen() {
                   <HugeiconsIcon icon={Settings01Icon} size={15} strokeWidth={1.5} />
                 </button>
               </div>
-              <button
-                type="button"
-                onClick={() => navigate({ to: '/chat/$sessionKey', params: { sessionKey: 'main' } })}
-                className="inline-flex items-center gap-1 rounded-md border border-primary-200 px-2.5 py-1 text-[11px] font-medium text-primary-600 transition-colors hover:border-primary-300 hover:text-ink dark:border-primary-300 dark:hover:text-primary-200"
-              >
-                Workspace →
-              </button>
-              <span className="mx-0.5 h-4 w-px bg-primary-200" />
-              <ThemeToggle />
-              <AddWidgetPopover visibleIds={visibleIds} onAdd={addWidget} />
-              <button
-                type="button"
-                onClick={handleResetLayout}
-                className="inline-flex size-7 items-center justify-center rounded-md text-primary-400 transition-colors hover:text-primary-700 dark:hover:text-primary-300"
-                aria-label="Reset Layout"
-                title="Reset Layout"
-              >
-                <HugeiconsIcon icon={RefreshIcon} size={15} strokeWidth={1.5} />
-              </button>
-              <button
-                type="button"
-                onClick={() => setSettingsOpen(true)}
-                className="inline-flex size-7 items-center justify-center rounded-md text-primary-400 transition-colors hover:text-primary-700 dark:hover:text-primary-300"
-                aria-label="Settings"
-                title="Settings"
-              >
-                <HugeiconsIcon icon={Settings01Icon} size={15} strokeWidth={1.5} />
-              </button>
             </div>
           </div>
         </header>
