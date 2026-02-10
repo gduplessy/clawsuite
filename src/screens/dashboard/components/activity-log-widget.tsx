@@ -70,8 +70,17 @@ export function ActivityLogWidget() {
       </div>
 
       {!isConnected ? (
-        <div className="mb-2 rounded-lg border border-red-200 bg-red-100/60 px-2.5 py-2 text-xs text-red-700 text-pretty">
-          Disconnected
+        <div className="mb-2 rounded-lg border border-primary-200 bg-primary-100/60 px-3 py-2.5 text-xs text-primary-600">
+          <p className="font-medium">Gateway disconnected</p>
+          <p className="mt-0.5">Reconnect to see live events.</p>
+          <button
+            type="button"
+            onClick={() => window.location.reload()}
+            className="mt-1.5 text-xs font-medium text-primary-800 underline hover:text-primary-900 focus:outline-none focus:ring-2 focus:ring-primary-400 focus:ring-offset-1 rounded"
+            aria-label="Retry connection"
+          >
+            Retry
+          </button>
         </div>
       ) : null}
 
