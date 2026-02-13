@@ -86,6 +86,16 @@ function ProfileContent() {
   const [profileError, setProfileError] = useState<string | null>(null)
   const [processing, setProcessing] = useState(false)
   const displayName = getChatProfileDisplayName(cs.displayName)
+  const [nameError, setNameError] = useState<string | null>(null)
+
+  function handleNameChange(value: string) {
+    if (value.length > 50) {
+      setNameError('Display name too long (max 50 characters)')
+      return
+    }
+    setNameError(null)
+    updateCS({ displayName: value })
+  }
 
   async function handleAvatarUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
@@ -109,6 +119,8 @@ function ProfileContent() {
     } catch { setProfileError('Failed to process image.') } finally { setProcessing(false) }
   }
 
+  const errorId = 'profile-name-error'
+
   return (
     <div className="space-y-3">
       <SectionHeader title="Profile" description="Your display name and avatar for chat." />
@@ -116,14 +128,39 @@ function ProfileContent() {
         <UserAvatar size={48} src={cs.avatarDataUrl} alt={displayName} />
         <div><p className="text-sm font-medium text-primary-900 dark:text-gray-100">{displayName}</p><p className="text-xs text-primary-500 dark:text-gray-400">Shown in sidebar and chat.</p></div>
       </div>
-      <Row label="Display name"><Input value={cs.displayName} onChange={(e) => updateCS({ displayName: e.target.value })} placeholder="User" className="h-8 w-48" /></Row>
-      <Row label="Profile picture">
-        <div className="flex items-center gap-2">
-          <input type="file" accept="image/*" onChange={handleAvatarUpload} className="block w-48 cursor-pointer text-xs file:mr-2 file:rounded-md file:border file:border-primary-200 file:bg-primary-100 file:px-2 file:py-1 file:text-xs" />
-          <Button variant="outline" size="sm" onClick={() => updateCS({ avatarDataUrl: null })} disabled={!cs.avatarDataUrl || processing}>Remove</Button>
+      <Row label="Display name">
+        <div className="flex-1 max-w-xs">
+          <Input 
+            value={cs.displayName} 
+            onChange={(e) => handleNameChange(e.target.value)} 
+            placeholder="User" 
+            className="h-9 w-full"
+            maxLength={50}
+            aria-label="Display name"
+            aria-invalid={!!nameError}
+            aria-describedby={nameError ? errorId : undefined}
+          />
+          {nameError && <p id={errorId} className="mt-1 text-xs text-red-600" role="alert">{nameError}</p>}
         </div>
       </Row>
-      {profileError && <p className="text-xs text-red-600">{profileError}</p>}
+      <Row label="Profile picture">
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center gap-2">
+            <label className="block">
+              <input 
+                type="file" 
+                accept="image/*" 
+                onChange={handleAvatarUpload}
+                disabled={processing}
+                aria-label="Upload profile picture"
+                className="block max-w-[12rem] cursor-pointer text-xs text-primary-700 dark:text-gray-300 file:mr-2 file:cursor-pointer file:rounded-md file:border file:border-primary-200 dark:file:border-gray-600 file:bg-primary-100 dark:file:bg-gray-700 file:px-2 file:py-1 file:text-xs file:font-medium file:text-primary-900 dark:file:text-gray-100 file:transition-colors hover:file:bg-primary-200 dark:hover:file:bg-gray-600 disabled:cursor-not-allowed disabled:opacity-50"
+              />
+            </label>
+            <Button variant="outline" size="sm" onClick={() => updateCS({ avatarDataUrl: null })} disabled={!cs.avatarDataUrl || processing}>Remove</Button>
+          </div>
+          {profileError && <p className="text-xs text-red-600" role="alert">{profileError}</p>}
+        </div>
+      </Row>
     </div>
   )
 }

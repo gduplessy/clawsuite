@@ -187,11 +187,11 @@ export function HeaderAmbientStatus() {
                     onChange={(e) => setLocationInput(e.target.value)}
                     onKeyDown={handleLocationKeyDown}
                     onBlur={handleLocationSave}
-                    placeholder="Enter zip code or city name"
+                    placeholder="City, postal code, or airport code"
                     autoFocus
                   />
                   <div className="mt-1.5 text-[10px] text-primary-500">
-                    Enter zip code or city name
+                    City, postal code, or airport code
                   </div>
                 </div>
               )}

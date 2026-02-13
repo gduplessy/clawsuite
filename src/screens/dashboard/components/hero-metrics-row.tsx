@@ -76,14 +76,23 @@ export function HeroMetricsRow({
             />
           </span>
           <div className="min-w-0 flex-1">
-            <p className={`truncate text-2xl font-bold font-mono tabular-nums leading-none ${
-              m.isError ? 'text-red-600 dark:text-red-500 text-xs' : 'text-ink'
-            }`}>
-              {m.value}
-            </p>
-            <p className="mt-1 text-xs uppercase tracking-wider text-primary-500">
-              {m.label}
-            </p>
+            {m.isError ? (
+              <>
+                <p className="text-2xl font-bold font-mono tabular-nums leading-none text-primary-300">—</p>
+                <p className="mt-1 text-xs font-medium text-red-600 dark:text-red-500">
+                  {m.value}
+                </p>
+              </>
+            ) : (
+              <>
+                <p className="truncate text-2xl font-bold font-mono tabular-nums leading-none text-ink">
+                  {m.value}
+                </p>
+                <p className="mt-1 text-xs uppercase tracking-wider text-primary-500">
+                  {m.label}
+                </p>
+              </>
+            )}
           </div>
           {m.isError && m.onRetry ? (
             <button
