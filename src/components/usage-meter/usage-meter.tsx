@@ -599,8 +599,9 @@ export function UsageMeter() {
       providerUsage,
       providerError,
       providerUpdatedAt,
+      onRefreshProviders: refreshProviders,
     }),
-    [error, providerError, providerUpdatedAt, providerUsage, usage],
+    [error, providerError, providerUpdatedAt, providerUsage, usage, refreshProviders],
   )
 
   const handleStatsViewChange = (view: StatsView) => {

@@ -885,8 +885,8 @@ export async function getProviderUsage(force = false): Promise<ProviderUsageResp
     }
   })
 
-  // Filter out missing_credentials — only show providers that are actually configured
-  const activeProviders = providers.filter(p => p.status !== 'missing_credentials')
+  // Show all providers — unconfigured ones display setup instructions
+  const activeProviders = providers
 
   const payload: ProviderUsageResponse = {
     ok: true,

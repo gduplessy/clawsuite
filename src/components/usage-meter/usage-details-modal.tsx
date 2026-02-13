@@ -57,6 +57,7 @@ type UsageDetailsModalProps = {
   providerUsage: Array<ProviderUsage>
   providerError: string | null
   providerUpdatedAt: number | null
+  onRefreshProviders?: () => Promise<void>
 }
 
 function formatCurrency(value: number): string {
@@ -235,6 +236,7 @@ export function UsageDetailsModal({
   providerUsage,
   providerError,
   providerUpdatedAt,
+  onRefreshProviders,
 }: UsageDetailsModalProps) {
   const [activeTab, setActiveTab] = useState<'session' | 'providers'>('providers')
   const [defaultModel, setDefaultModel] = useState<string | null>(null)
@@ -285,10 +287,12 @@ export function UsageDetailsModal({
   const handleRefreshProvider = async () => {
     setIsRefreshing(true)
     try {
-      // Force refresh by adding force=1 query param
-      await fetch('/api/provider-usage?force=1')
-      // Trigger a page refresh to update the data
-      window.location.reload()
+      // Force refresh provider data without page reload
+      const res = await fetch('/api/provider-usage?force=1')
+      if (res.ok && onRefreshProviders) {
+        await onRefreshProviders()
+      }
+      setIsRefreshing(false)
     } catch (error) {
       console.error('Failed to refresh provider data:', error)
     } finally {
