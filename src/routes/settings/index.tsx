@@ -26,6 +26,7 @@ import {
   getChatProfileDisplayName,
   useChatSettingsStore,
 } from '@/hooks/use-chat-settings'
+import { useGatewaySetupStore } from '@/hooks/use-gateway-setup'
 import type { LoaderStyle } from '@/hooks/use-chat-settings'
 import { UserAvatar } from '@/components/avatars'
 import { Input } from '@/components/ui/input'
@@ -111,6 +112,7 @@ const SETTINGS_NAV_ITEMS: SettingsNavItem[] = [
 function SettingsRoute() {
   usePageTitle('Settings')
   const { settings, updateSettings } = useSettings()
+  const gatewaySetup = useGatewaySetupStore()
   const [connectionStatus, setConnectionStatus] = useState<
     'idle' | 'testing' | 'connected' | 'failed'
   >('idle')
@@ -151,7 +153,22 @@ function SettingsRoute() {
     setConnectionStatus('testing')
 
     try {
-      const response = await fetch('/api/ping')
+      // Use configured gateway URL + token
+      const url = settings.gatewayUrl || '/api/ping'
+      const headers: HeadersInit = {}
+      
+      // Add auth header if token is provided
+      if (settings.gatewayToken) {
+        headers['Authorization'] = `Bearer ${settings.gatewayToken}`
+      }
+
+      // Try hitting the gateway's /health endpoint
+      const testUrl = url.startsWith('http') ? `${url}/health` : url
+      const response = await fetch(testUrl, {
+        headers,
+        signal: AbortSignal.timeout(5000),
+      })
+      
       setConnectionStatus(response.ok ? 'connected' : 'failed')
     } catch {
       setConnectionStatus('failed')
@@ -480,6 +497,23 @@ function SettingsRoute() {
                   </div>
                 </SettingsRow>
                 <SettingsRow
+                  label="Gateway Token"
+                  description="Authentication token for your gateway (optional)."
+                >
+                  <div className="flex-1 max-w-md">
+                    <input
+                      type="password"
+                      placeholder="Enter your gateway token..."
+                      value={settings.gatewayToken}
+                      onChange={(e) =>
+                        updateSettings({ gatewayToken: e.target.value })
+                      }
+                      className="h-9 w-full rounded-lg border border-primary-200 dark:border-gray-600 bg-primary-50 dark:bg-gray-800 px-3 text-sm text-primary-900 dark:text-gray-100 outline-none transition-colors focus-visible:ring-2 focus-visible:ring-primary-400 dark:focus-visible:ring-primary-500"
+                      aria-label="Gateway Token"
+                    />
+                  </div>
+                </SettingsRow>
+                <SettingsRow
                   label="Connection status"
                   description="Current gateway reachability check state."
                 >
@@ -519,6 +553,18 @@ function SettingsRoute() {
                       strokeWidth={1.5}
                     />
                     Test
+                  </Button>
+                </SettingsRow>
+                <SettingsRow
+                  label="Setup wizard"
+                  description="Re-run the gateway configuration wizard."
+                >
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => gatewaySetup.open()}
+                  >
+                    Reconfigure Gateway
                   </Button>
                 </SettingsRow>
               </SettingsSection>

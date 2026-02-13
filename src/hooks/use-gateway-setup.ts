@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { useSettingsStore } from './use-settings'
 
 const SETUP_STORAGE_KEY = 'clawsuite-gateway-configured'
 const LOCAL_GATEWAY_URL = 'http://localhost:18789'
@@ -58,6 +59,26 @@ async function detectLocalGateway(): Promise<boolean> {
   }
 }
 
+async function tryDetectToken(): Promise<string | null> {
+  try {
+    // Try to hit the local gateway without auth first
+    const response = await fetch(`${LOCAL_GATEWAY_URL}/health`, {
+      signal: AbortSignal.timeout(3000),
+    })
+    
+    // If it works without auth, no token needed
+    if (response.ok) {
+      return ''
+    }
+    
+    // If 401/403, token is required but we can't auto-detect it
+    // (Would need to read from openclaw config, which requires backend support)
+    return null
+  } catch {
+    return null
+  }
+}
+
 export const useGatewaySetupStore = create<GatewaySetupState>((set, get) => ({
   isOpen: false,
   step: 'gateway',
@@ -74,6 +95,11 @@ export const useGatewaySetupStore = create<GatewaySetupState>((set, get) => ({
     if (typeof window === 'undefined') return
 
     try {
+      // Load existing settings
+      const existingSettings = useSettingsStore.getState().settings
+      const existingUrl = existingSettings.gatewayUrl
+      const existingToken = existingSettings.gatewayToken
+
       // Check if setup was completed
       const configured = localStorage.getItem(SETUP_STORAGE_KEY) === 'true'
       if (configured) {
@@ -100,12 +126,13 @@ export const useGatewaySetupStore = create<GatewaySetupState>((set, get) => ({
       // Gateway not working, check if local gateway is running
       const localDetected = await detectLocalGateway()
 
-      // Open the wizard
+      // Open the wizard with existing settings or detected local gateway
       set({
         isOpen: true,
         step: 'gateway',
         localGatewayDetected: localDetected,
-        gatewayUrl: localDetected ? LOCAL_GATEWAY_URL : '',
+        gatewayUrl: existingUrl || (localDetected ? LOCAL_GATEWAY_URL : ''),
+        gatewayToken: existingToken || '',
       })
     } catch {
       // Ignore errors during initialization
@@ -121,21 +148,36 @@ export const useGatewaySetupStore = create<GatewaySetupState>((set, get) => ({
   },
 
   testConnection: async () => {
+    const state = get()
     set({ testStatus: 'testing', testError: null })
 
     try {
-      // Test the configured gateway via the API
-      const healthy = await checkGatewayHealth()
-      if (healthy) {
-        set({ testStatus: 'success', testError: null })
-        return true
-      } else {
+      // Test the configured gateway URL + token
+      const url = state.gatewayUrl || '/api/ping'
+      const headers: HeadersInit = {}
+      
+      // Add auth header if token is provided
+      if (state.gatewayToken) {
+        headers['Authorization'] = `Bearer ${state.gatewayToken}`
+      }
+
+      // Try hitting the gateway's /health endpoint
+      const testUrl = url.startsWith('http') ? `${url}/health` : url
+      const response = await fetch(testUrl, {
+        headers,
+        signal: AbortSignal.timeout(5000),
+      })
+
+      if (!response.ok) {
         set({
           testStatus: 'error',
-          testError: 'Unable to connect to gateway',
+          testError: `Gateway returned ${response.status}: ${response.statusText}`,
         })
         return false
       }
+
+      set({ testStatus: 'success', testError: null })
+      return true
     } catch (error) {
       set({
         testStatus: 'error',
@@ -147,8 +189,13 @@ export const useGatewaySetupStore = create<GatewaySetupState>((set, get) => ({
   },
 
   saveGatewayAndProceed: () => {
-    // In a real implementation, this would save to server/config
-    // For now, we just proceed to provider setup
+    const state = get()
+    // Save gateway URL and token to the settings store
+    useSettingsStore.getState().updateSettings({
+      gatewayUrl: state.gatewayUrl,
+      gatewayToken: state.gatewayToken,
+    })
+    // Proceed to provider setup
     set({ step: 'provider' })
   },
 
@@ -176,6 +223,15 @@ export const useGatewaySetupStore = create<GatewaySetupState>((set, get) => ({
   },
 
   open: () => {
-    set({ isOpen: true, step: 'gateway' })
+    // Load existing settings when opening manually
+    const existingSettings = useSettingsStore.getState().settings
+    set({
+      isOpen: true,
+      step: 'gateway',
+      gatewayUrl: existingSettings.gatewayUrl || '',
+      gatewayToken: existingSettings.gatewayToken || '',
+      testStatus: 'idle',
+      testError: null,
+    })
   },
 }))

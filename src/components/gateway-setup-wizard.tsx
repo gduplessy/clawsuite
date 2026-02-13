@@ -98,9 +98,18 @@ function GatewayStepContent() {
             onChange={(e) => setGatewayToken(e.target.value)}
             className="h-10"
           />
-          <p className="mt-1 text-xs text-primary-500">
-            Leave blank if your gateway doesn't require authentication
-          </p>
+          {localGatewayDetected ? (
+            <p className="mt-1 text-xs text-primary-500">
+              To find your token, run:{' '}
+              <code className="rounded bg-primary-100 px-1 py-0.5">
+                openclaw config get gateway.auth.token
+              </code>
+            </p>
+          ) : (
+            <p className="mt-1 text-xs text-primary-500">
+              Leave blank if your gateway doesn't require authentication
+            </p>
+          )}
         </div>
 
         {testError && (

@@ -7,6 +7,7 @@ export type AccentColor = 'orange' | 'purple' | 'blue' | 'green'
 
 export type StudioSettings = {
   gatewayUrl: string
+  gatewayToken: string
   theme: SettingsThemeMode
   accentColor: AccentColor
   editorFontSize: number
@@ -27,6 +28,7 @@ type SettingsState = {
 
 export const defaultStudioSettings: StudioSettings = {
   gatewayUrl: '',
+  gatewayToken: '',
   theme: 'light',
   accentColor: 'orange',
   editorFontSize: 13,
