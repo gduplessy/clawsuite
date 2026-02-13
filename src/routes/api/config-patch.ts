@@ -9,15 +9,21 @@ export const Route = createFileRoute('/api/config-patch')({
         try {
           const body = (await request.json().catch(() => ({}))) as Record<string, unknown>
           const raw = typeof body.raw === 'string' ? body.raw : ''
-          const reason = typeof body.reason === 'string' ? body.reason : 'Studio provider setup'
 
           if (!raw.trim()) {
             return json({ ok: false, error: 'raw config patch required' }, { status: 400 })
           }
 
-          const result = await gatewayRpc<{ ok: boolean; error?: string }>('config.patch', {
-            raw,
-          })
+          // Get current config hash for optimistic concurrency
+          const configResult = await gatewayRpc<{ hash?: string }>('config.get')
+          const baseHash = (configResult as any)?.hash
+
+          const params: Record<string, unknown> = { raw }
+          if (baseHash) {
+            params.baseHash = baseHash
+          }
+
+          const result = await gatewayRpc<{ ok: boolean; error?: string }>('config.patch', params)
 
           return json({ ...result, ok: true })
         } catch (err) {
