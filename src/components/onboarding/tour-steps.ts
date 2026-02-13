@@ -34,13 +34,13 @@ export const tourSteps: Step[] = [
     content:
       'Your overview of sessions, usage, and activity. See everything at a glance.',
   },
-  // Step 5: Chat area (main content)
+  // Step 5: Main content area
   {
     target: '[data-tour="chat-area"]',
     placement: 'left',
-    title: 'Chat Interface',
+    title: 'Main Content Area',
     content:
-      'Chat with your AI agent here. Switch models, attach files, and customize your conversation.',
+      'This is where your active page content appears - chat sessions, dashboard, settings, and more. Click the floating chat button (bottom-right) to open a chat panel while viewing other pages.',
   },
   // Step 6: Agent Hub
   {

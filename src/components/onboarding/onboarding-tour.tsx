@@ -30,20 +30,7 @@ export function OnboardingTour() {
       const hasCompletedTour = localStorage.getItem(TOUR_STORAGE_KEY)
       if (hasCompletedTour) return
 
-      // Wait for the wizard to finish first before starting the tour
-      const wizardComplete = localStorage.getItem('openclaw-onboarding-complete') === 'true'
-      if (!wizardComplete) {
-        // Poll until wizard completes (user might be going through it)
-        const interval = setInterval(() => {
-          if (localStorage.getItem('openclaw-onboarding-complete') === 'true') {
-            clearInterval(interval)
-            setTimeout(() => setRun(true), 500)
-          }
-        }, 1000)
-        return () => clearInterval(interval)
-      }
-
-      // Wizard done, tour not done — start tour after brief delay
+      // Tour not done — start tour after brief delay
       const timer = setTimeout(() => setRun(true), 1000)
       return () => clearTimeout(timer)
     } catch {
