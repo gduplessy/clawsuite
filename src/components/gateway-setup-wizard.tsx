@@ -7,11 +7,12 @@ import {
   CloudIcon,
   CheckmarkCircle02Icon,
   Alert02Icon,
-  Settings02Icon,
 } from '@hugeicons/core-free-icons'
+import { cn } from '@/lib/utils'
 import { useGatewaySetupStore } from '@/hooks/use-gateway-setup'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { ProviderSelectStep } from '@/components/onboarding/provider-select-step'
 
 function GatewayStepContent() {
   const {
@@ -146,59 +147,25 @@ function GatewayStepContent() {
 function ProviderStepContent() {
   const { skipProviderSetup, completeSetup } = useGatewaySetupStore()
 
+  const handleProviderComplete = async (providerId: string, apiKey: string) => {
+    // Save the provider config to the gateway
+    try {
+      await fetch('/api/gateway-config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ providerId, apiKey }),
+      })
+    } catch {
+      // Non-blocking — user can configure later
+    }
+    completeSetup()
+  }
+
   return (
-    <div className="w-full">
-      <div className="mb-6 flex flex-col items-center text-center">
-        <div className="mb-4 flex size-20 items-center justify-center rounded-2xl bg-gradient-to-br from-purple-500 to-purple-600 text-white shadow-lg">
-          <HugeiconsIcon
-            icon={Settings02Icon}
-            className="size-10"
-            strokeWidth={1.5}
-          />
-        </div>
-        <h2 className="mb-2 text-2xl font-semibold text-primary-900">
-          Configure Providers
-        </h2>
-        <p className="max-w-md text-sm leading-relaxed text-primary-600">
-          You'll need at least one AI provider (OpenAI, Anthropic, or
-          OpenRouter) to start chatting.
-        </p>
-      </div>
-
-      <div className="mb-5 rounded-lg border border-primary-200 bg-primary-50 p-4">
-        <h3 className="mb-2 text-sm font-semibold text-primary-900">
-          Add a provider:
-        </h3>
-        <ol className="space-y-2 text-sm text-primary-700">
-          <li className="flex gap-2">
-            <span className="font-semibold text-primary-400">1.</span>
-            <span>
-              Run{' '}
-              <code className="rounded bg-primary-100 px-1 py-0.5 text-xs">
-                openclaw providers add
-              </code>
-            </span>
-          </li>
-          <li className="flex gap-2">
-            <span className="font-semibold text-primary-400">2.</span>
-            <span>Or configure providers in Settings → Providers</span>
-          </li>
-        </ol>
-      </div>
-
-      <div className="flex gap-3">
-        <Button variant="secondary" onClick={skipProviderSetup} className="flex-1">
-          Skip for Now
-        </Button>
-        <Button
-          variant="default"
-          onClick={completeSetup}
-          className="flex-1 bg-accent-500 hover:bg-accent-600"
-        >
-          Done
-        </Button>
-      </div>
-    </div>
+    <ProviderSelectStep
+      onComplete={handleProviderComplete}
+      onSkip={skipProviderSetup}
+    />
   )
 }
 
@@ -226,11 +193,26 @@ export function GatewaySetupWizard() {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className="relative w-[min(520px,92vw)] min-w-[320px] overflow-hidden rounded-2xl border border-primary-200 bg-primary-50 shadow-2xl"
+            className="relative w-[min(620px,92vw)] min-w-[320px] overflow-hidden rounded-2xl border border-primary-200 bg-primary-50 shadow-2xl"
           >
             <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-accent-500/5 via-transparent to-transparent" />
 
-            <div className="relative px-8 pb-8 pt-10">
+            <div className="relative px-8 pb-8 pt-8">
+              {/* Step dots */}
+              <div className="mb-6 flex items-center justify-center gap-2">
+                {(['gateway', 'provider'] as const).map((s) => (
+                  <div
+                    key={s}
+                    className={cn(
+                      'size-2 rounded-full transition-colors',
+                      step === s
+                        ? 'bg-accent-500'
+                        : 'bg-primary-300',
+                    )}
+                  />
+                ))}
+              </div>
+
               <AnimatePresence mode="wait">
                 <motion.div
                   key={step}
