@@ -277,8 +277,8 @@ export function DashboardScreen() {
                 )}
                 <OpenClawStudioIcon className="size-8 shrink-0 rounded-xl shadow-sm" />
                 <div className="flex min-w-0 items-center gap-2.5">
-                  <h1 className="text-sm font-semibold text-ink text-balance md:text-base">
-                    ClawSuite
+                  <h1 className="text-sm font-semibold text-ink text-balance md:text-base truncate">
+                    {isMobile ? 'ClawSuite' : 'ClawSuite'}
                   </h1>
                   <span
                     className={cn(
@@ -357,7 +357,7 @@ export function DashboardScreen() {
           />
 
           {/* Inline widget controls — belongs with the grid, not the header */}
-          <div className="mb-4 flex items-center justify-end gap-2">
+          <div className="mb-4 flex items-center justify-center md:justify-end gap-2">
             <AddWidgetPopover visibleIds={visibleIds} onAdd={addWidget} />
             <button
               type="button"

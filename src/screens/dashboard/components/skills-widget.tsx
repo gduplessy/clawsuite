@@ -128,12 +128,12 @@ export function SkillsWidget({
               <article
                 key={skill.id}
                 className={cn(
-                  'rounded-lg border border-primary-200 px-3 py-2.5',
+                  'rounded-lg border border-primary-200 px-2.5 py-2 md:px-3 md:py-2.5',
                   index % 2 === 0 ? 'bg-primary-50/90' : 'bg-primary-100/55',
                 )}
               >
                 <div className="flex items-start justify-between gap-3">
-                  <p className="line-clamp-1 text-sm font-medium text-ink text-balance">
+                  <p className="line-clamp-1 text-xs md:text-sm font-medium text-ink text-balance">
                     {skill.name}
                   </p>
                   <span
@@ -147,7 +147,7 @@ export function SkillsWidget({
                     {skill.enabled ? 'Enabled' : 'Disabled'}
                   </span>
                 </div>
-                <p className="mt-1 line-clamp-2 text-sm text-primary-600 text-pretty">
+                <p className="mt-1 line-clamp-1 md:line-clamp-2 text-xs md:text-sm text-primary-600 text-pretty">
                   {skill.description}
                 </p>
               </article>
