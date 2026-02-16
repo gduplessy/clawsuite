@@ -25,7 +25,7 @@ import {
   useRef,
   useState,
 } from 'react'
-import type { Ref } from 'react'
+import type { CSSProperties, Ref } from 'react'
 
 import {
   PromptInput,
@@ -33,7 +33,7 @@ import {
   PromptInputActions,
   PromptInputTextarea,
 } from '@/components/prompt-kit/prompt-input'
-// Tab bar is hidden on chat routes — no offset needed in composer
+import { MOBILE_TAB_BAR_OFFSET } from '@/components/mobile-tab-bar'
 import { useWorkspaceStore } from '@/stores/workspace-store'
 import { Button } from '@/components/ui/button'
 import { fetchModels, switchModel } from '@/lib/gateway-api'
@@ -99,8 +99,6 @@ type ModelSwitchNotice = {
   message: string
   retryModel?: string
 }
-
-// Composer wrapper style — tab bar hidden on chat, no offset needed
 
 function formatFileSize(size: number): string {
   if (!Number.isFinite(size) || size <= 0) return ''
@@ -306,6 +304,7 @@ function ChatComposerComponent({
   composerRef,
   focusKey,
 }: ChatComposerProps) {
+  const mobileKeyboardOpen = useWorkspaceStore((s) => s.mobileKeyboardOpen)
   const setMobileKeyboardOpen = useWorkspaceStore((s) => s.setMobileKeyboardOpen)
   const [value, setValue] = useState('')
   const [attachments, setAttachments] = useState<Array<ChatComposerAttachment>>(
@@ -968,14 +967,26 @@ function ChatComposerComponent({
     [wrapperRef],
   )
 
+  const composerWrapperStyle = useMemo(
+    () =>
+      ({
+        maxWidth: 'min(768px, 100%)',
+        '--mobile-tab-bar-offset': MOBILE_TAB_BAR_OFFSET,
+      }) as CSSProperties,
+    [],
+  )
+
   return (
     <div
       className={cn(
         'z-40 mx-auto w-full shrink-0 bg-surface px-3 pt-2 sm:px-5 md:bg-surface/95 md:backdrop-blur',
-        'pb-[max(env(safe-area-inset-bottom),0.25rem)]',
+        mobileKeyboardOpen
+          ? 'pb-[max(env(safe-area-inset-bottom),0.25rem)]'
+          : 'pb-[calc(env(safe-area-inset-bottom)+var(--mobile-tab-bar-offset))]',
         'md:pb-[calc(env(safe-area-inset-bottom)+0.75rem)]',
+        'md:transition-[padding-bottom,background-color,backdrop-filter] md:duration-200',
       )}
-      style={{ maxWidth: 'min(768px, 100%)' }}
+      style={composerWrapperStyle}
       ref={setWrapperRefs}
     >
       <input
