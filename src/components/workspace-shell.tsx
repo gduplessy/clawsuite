@@ -11,7 +11,7 @@
  * Chat routes get the full ChatScreen treatment.
  * Non-chat routes show the sub-page content.
  */
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Outlet, useNavigate, useRouterState } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
 import { ChatSidebar } from '@/screens/chat/components/chat-sidebar'
@@ -52,11 +52,6 @@ export function WorkspaceShell() {
 
   const [creatingSession, setCreatingSession] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
-  const swipeStartRef = useRef<{
-    x: number
-    y: number
-    at: number
-  } | null>(null)
   const [authState] = useState({
     checked: true,
     authenticated: true,
@@ -124,50 +119,6 @@ export function WorkspaceShell() {
     }
   }, [isMobile, setSidebarCollapsed])
 
-  // Edge swipe gesture: left edge swipe opens sidebar
-  useEffect(() => {
-    const EDGE_ZONE_PX = 28
-    const MIN_SWIPE_PX = 56
-    const MAX_VERTICAL_DRIFT_PX = 72
-    const MAX_DURATION_MS = 520
-
-    function handleTouchStart(event: TouchEvent) {
-      if (event.touches.length !== 1) return
-      const touch = event.touches[0]
-      swipeStartRef.current = {
-        x: touch.clientX,
-        y: touch.clientY,
-        at: Date.now(),
-      }
-    }
-
-    function handleTouchEnd(event: TouchEvent) {
-      if (!isMobile) return
-      const start = swipeStartRef.current
-      swipeStartRef.current = null
-      if (!start || event.changedTouches.length !== 1) return
-
-      const touch = event.changedTouches[0]
-      const dx = touch.clientX - start.x
-      const dy = touch.clientY - start.y
-      const elapsed = Date.now() - start.at
-      if (elapsed > MAX_DURATION_MS) return
-      if (Math.abs(dy) > MAX_VERTICAL_DRIFT_PX) return
-
-      const fromLeftEdge = start.x <= EDGE_ZONE_PX
-      if (fromLeftEdge && dx >= MIN_SWIPE_PX) {
-        setSidebarCollapsed(false)
-      }
-    }
-
-    window.addEventListener('touchstart', handleTouchStart, { passive: true })
-    window.addEventListener('touchend', handleTouchEnd, { passive: true })
-    return () => {
-      window.removeEventListener('touchstart', handleTouchStart)
-      window.removeEventListener('touchend', handleTouchEnd)
-    }
-  }, [isMobile, setSidebarCollapsed])
-
   // Listen for global sidebar toggle shortcut
   useEffect(() => {
     function handleToggleEvent() {
@@ -200,26 +151,20 @@ export function WorkspaceShell() {
       <div className="grid h-full grid-cols-1 grid-rows-[minmax(0,1fr)] overflow-hidden md:grid-cols-[auto_1fr]">
         {/* Activity ticker bar */}
         {/* Persistent sidebar */}
-        <ChatSidebar
-          sessions={sessions}
-          activeFriendlyId={activeFriendlyId}
-          creatingSession={creatingSession}
-          onCreateSession={startNewChat}
-          isCollapsed={sidebarCollapsed}
-          onToggleCollapse={toggleSidebar}
-          onSelectSession={handleSelectSession}
-          onActiveSessionDelete={handleActiveSessionDelete}
-          sessionsLoading={sessionsLoading}
-          sessionsFetching={sessionsFetching}
-          sessionsError={sessionsError}
-          onRetrySessions={refetchSessions}
-        />
-
-        {/* Mobile backdrop overlay when sidebar is open */}
-        {isMobile && !sidebarCollapsed && (
-          <div
-            className="fixed inset-0 z-40 bg-black/50 md:hidden"
-            onClick={() => setSidebarCollapsed(true)}
+        {!isMobile && (
+          <ChatSidebar
+            sessions={sessions}
+            activeFriendlyId={activeFriendlyId}
+            creatingSession={creatingSession}
+            onCreateSession={startNewChat}
+            isCollapsed={sidebarCollapsed}
+            onToggleCollapse={toggleSidebar}
+            onSelectSession={handleSelectSession}
+            onActiveSessionDelete={handleActiveSessionDelete}
+            sessionsLoading={sessionsLoading}
+            sessionsFetching={sessionsFetching}
+            sessionsError={sessionsError}
+            onRetrySessions={refetchSessions}
           />
         )}
 

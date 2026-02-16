@@ -74,7 +74,7 @@ export function MobileTabBar() {
       className="fixed inset-x-0 bottom-0 z-[60] pointer-events-none pb-[env(safe-area-inset-bottom)] md:hidden"
       aria-label="Mobile navigation"
     >
-      <div className="pointer-events-auto mx-2 mb-1 grid grid-cols-5 rounded-2xl border border-primary-200/60 bg-white/80 px-1 py-1.5 shadow-[0_2px_20px_rgba(0,0,0,0.08)] backdrop-blur-2xl backdrop-saturate-150">
+      <div className="pointer-events-auto mx-2 mb-1 grid grid-cols-5 gap-1 rounded-2xl border border-primary-200/60 bg-white/80 px-1 py-1.5 shadow-[0_2px_20px_rgba(0,0,0,0.08)] backdrop-blur-2xl backdrop-saturate-150">
         {TABS.map((tab) => {
           const isActive = tab.match(pathname)
           const isCenterChat = tab.id === 'chat'
@@ -87,7 +87,7 @@ export function MobileTabBar() {
               className={cn(
                 'flex min-w-0 flex-col items-center justify-center gap-0.5 rounded-xl py-1 text-[10px] font-medium transition-transform duration-150 active:scale-90',
                 isCenterChat
-                  ? '-translate-y-0.5'
+                  ? '-translate-y-1'
                   : '',
               )}
             >
@@ -97,7 +97,7 @@ export function MobileTabBar() {
                   isCenterChat
                     ? cn(
                         'size-9 bg-accent-500 text-white shadow-sm',
-                        isActive && 'ring-2 ring-accent-300/60 shadow-md',
+                        isActive && 'ring-1 ring-accent-200/40 shadow-sm',
                       )
                     : isActive
                       ? 'size-7 bg-accent-500/15 text-accent-600'

@@ -63,6 +63,7 @@ import { useTerminalPanelStore } from '@/stores/terminal-panel-store'
 import { useModelSuggestions } from '@/hooks/use-model-suggestions'
 import { ModelSuggestionToast } from '@/components/model-suggestion-toast'
 import { useChatActivityStore } from '@/stores/chat-activity-store'
+import { MobileSessionsPanel } from '@/components/mobile-sessions-panel'
 
 type ChatScreenProps = {
   activeFriendlyId: string
@@ -143,6 +144,7 @@ export function ChatScreen({
   const queryClient = useQueryClient()
   const [sending, setSending] = useState(false)
   const [_creatingSession, setCreatingSession] = useState(false)
+  const [sessionsOpen, setSessionsOpen] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [isRedirecting, setIsRedirecting] = useState(false)
   const { headerRef, composerRef, mainRef, pinGroupMinHeight, headerHeight } =
@@ -1128,14 +1130,12 @@ export function ChatScreen({
             <ChatHeader
               activeTitle={activeTitle}
               wrapperRef={headerRef}
-              showSidebarButton={isMobile}
-              onOpenSidebar={handleOpenSidebar}
+              onOpenSessions={() => setSessionsOpen(true)}
               showFileExplorerButton={!isMobile}
               fileExplorerCollapsed={fileExplorerCollapsed}
               onToggleFileExplorer={handleToggleFileExplorer}
               dataUpdatedAt={historyQuery.dataUpdatedAt}
               onRefresh={() => void historyQuery.refetch()}
-              mobileStatus={mobileHeaderStatus}
             />
           )}
 
@@ -1202,6 +1202,23 @@ export function ChatScreen({
           onSwitch={handleSwitchModel}
           onDismiss={dismiss}
           onDismissForSession={dismissForSession}
+        />
+      )}
+
+      {isMobile && (
+        <MobileSessionsPanel
+          open={sessionsOpen}
+          onClose={() => setSessionsOpen(false)}
+          sessions={sessions}
+          activeFriendlyId={activeFriendlyId}
+          onSelectSession={(friendlyId) => {
+            setSessionsOpen(false)
+            void navigate({ to: '/chat/$sessionKey', params: { sessionKey: friendlyId } })
+          }}
+          onNewChat={() => {
+            setSessionsOpen(false)
+            void navigate({ to: '/chat/$sessionKey', params: { sessionKey: 'new' } })
+          }}
         />
       )}
     </div>
