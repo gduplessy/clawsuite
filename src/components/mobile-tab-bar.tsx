@@ -8,8 +8,9 @@ import {
   UserMultipleIcon,
 } from '@hugeicons/core-free-icons'
 import { cn } from '@/lib/utils'
+import { useWorkspaceStore } from '@/stores/workspace-store'
 
-/** Total height of MobileTabBar including internal padding, used by other components for bottom insets */
+/** Height constant for consistent bottom insets across the app */
 export const MOBILE_TAB_BAR_OFFSET = '5rem'
 
 type TabItem = {
@@ -63,13 +64,17 @@ export function MobileTabBar() {
   const pathname = useRouterState({
     select: (state) => state.location.pathname,
   })
+  const mobileKeyboardOpen = useWorkspaceStore((s) => s.mobileKeyboardOpen)
+
+  // Hide tab bar when keyboard/composer is focused (immersive chat mode)
+  if (mobileKeyboardOpen) return null
 
   return (
     <nav
       className="fixed inset-x-0 bottom-0 z-[60] pb-[env(safe-area-inset-bottom)] md:hidden"
       aria-label="Mobile navigation"
     >
-      <div className="mx-2 mb-1 grid grid-cols-5 rounded-2xl border border-white/30 bg-white/60 px-1 py-1 shadow-lg backdrop-blur-xl backdrop-saturate-150">
+      <div className="mx-2 mb-1 grid grid-cols-5 rounded-2xl border border-white/20 bg-white/70 px-1 py-1.5 shadow-lg backdrop-blur-2xl backdrop-saturate-[1.8]">
         {TABS.map((tab) => {
           const isActive = tab.match(pathname)
           const isCenterChat = tab.id === 'chat'
@@ -80,35 +85,35 @@ export function MobileTabBar() {
               onClick={() => navigate({ to: tab.to })}
               aria-current={isActive ? 'page' : undefined}
               className={cn(
-                'flex min-w-0 flex-col items-center justify-center gap-1 rounded-xl px-1 py-1 text-[10px] font-medium transition-transform duration-150 active:scale-90',
+                'flex min-w-0 flex-col items-center justify-center gap-0.5 rounded-xl py-1 text-[10px] font-medium transition-transform duration-150 active:scale-90',
                 isCenterChat
-                  ? '-translate-y-1 text-primary-500'
-                  : isActive
-                    ? 'bg-white/70 text-accent-600 shadow-sm'
-                    : 'text-primary-500',
+                  ? '-translate-y-0.5'
+                  : '',
               )}
             >
               <span
                 className={cn(
                   'flex items-center justify-center rounded-full transition-all duration-150',
                   isCenterChat
-                    ? 'size-10 bg-accent-500 text-white'
+                    ? cn(
+                        'size-9 bg-accent-500 text-white shadow-sm',
+                        isActive && 'ring-2 ring-accent-300/60 shadow-md',
+                      )
                     : isActive
-                      ? 'size-6 bg-accent-500 text-white'
-                      : 'size-6 text-primary-400',
-                  isCenterChat && isActive ? 'ring-2 ring-accent-300 shadow-md' : '',
+                      ? 'size-7 bg-accent-500 text-white'
+                      : 'size-7 text-primary-400',
                 )}
               >
                 <HugeiconsIcon
                   icon={tab.icon}
-                  size={isCenterChat ? 22 : 18}
-                  strokeWidth={isCenterChat ? 1.9 : isActive ? 2 : 1.6}
+                  size={isCenterChat ? 20 : 17}
+                  strokeWidth={isCenterChat ? 1.8 : isActive ? 2 : 1.6}
                 />
               </span>
               <span
                 className={cn(
-                  isActive ? 'text-accent-600' : 'text-primary-400',
-                  isCenterChat && !isActive ? 'text-primary-500' : '',
+                  'leading-tight',
+                  isActive || isCenterChat ? 'text-accent-600' : 'text-primary-400',
                 )}
               >
                 {tab.label}
