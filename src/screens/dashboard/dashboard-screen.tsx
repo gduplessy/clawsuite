@@ -1,16 +1,17 @@
 import {
-  DragDropIcon,
+  ArrowDown01Icon,
+  ArrowUp02Icon,
+  Moon02Icon,
   RefreshIcon,
   Settings01Icon,
+  Sun02Icon,
 } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
-import { motion } from 'motion/react'
 import {
   type MouseEvent,
   type ReactNode,
-  type TouchEvent,
   useCallback,
   useEffect,
   useMemo,
@@ -60,6 +61,7 @@ import {
 import { fetchCronJobs } from '@/lib/cron-api'
 import { cn } from '@/lib/utils'
 import { toast } from '@/components/ui/toast'
+import { useSettingsStore } from '@/hooks/use-settings'
 import {
   type DashboardWidgetOrderId,
   useWidgetReorder,
@@ -94,17 +96,6 @@ type MobileWidgetSection = {
   label: string
   content: ReactNode
 }
-
-type MobileDragState = {
-  activeId: DashboardWidgetOrderId
-  fromVisibleIndex: number
-  startY: number
-  currentY: number
-  targetVisibleIndex: number
-  itemHeight: number
-}
-
-const MOBILE_WIDGET_GAP_PX = 12
 
 function readNumeric(value: unknown): number {
   if (typeof value === 'number' && Number.isFinite(value)) return value
@@ -242,18 +233,11 @@ export function DashboardScreen() {
   const { visibleIds, addWidget, removeWidget, resetVisible } =
     useVisibleWidgets()
   const { order: widgetOrder, moveWidget, resetOrder } = useWidgetReorder()
+  const theme = useSettingsStore((state) => state.settings.theme)
+  const updateSettings = useSettingsStore((state) => state.updateSettings)
   const containerRef = useRef<HTMLDivElement>(null)
   const [containerWidth, setContainerWidth] = useState<number | null>(null)
   const [isMobile, setIsMobile] = useState(false)
-  const [mobileEditMode, setMobileEditMode] = useState(false)
-  const [mobileDragState, setMobileDragState] = useState<MobileDragState | null>(
-    null,
-  )
-  const mobileItemRefs = useRef<
-    Partial<Record<DashboardWidgetOrderId, HTMLDivElement | null>>
-  >({})
-  const mobileVisibleSectionIdsRef = useRef<Array<DashboardWidgetOrderId>>([])
-  const widgetOrderRef = useRef(widgetOrder)
   const [nowMs, setNowMs] = useState(() => Date.now())
   const [mobileTipDismissed, setMobileTipDismissed] = useState(() => {
     if (typeof window === 'undefined') return false
@@ -272,15 +256,6 @@ export function DashboardScreen() {
     const interval = window.setInterval(() => setNowMs(Date.now()), 60_000)
     return () => window.clearInterval(interval)
   }, [])
-
-  useEffect(() => {
-    widgetOrderRef.current = widgetOrder
-  }, [widgetOrder])
-
-  useEffect(() => {
-    if (mobileEditMode) return
-    setMobileDragState(null)
-  }, [mobileEditMode])
 
   useEffect(() => {
     if (!containerRef.current) return
@@ -312,8 +287,6 @@ export function DashboardScreen() {
     setGridLayouts(fresh)
     resetVisible()
     resetOrder()
-    setMobileEditMode(false)
-    setMobileDragState(null)
   }, [resetOrder, resetVisible])
 
   const sessionsQuery = useQuery({
@@ -516,6 +489,17 @@ export function DashboardScreen() {
     },
     [nowMs, systemStatus.gateway.checkedAtIso],
   )
+
+  const nextTheme = useMemo(
+    () => (theme === 'light' ? 'dark' : theme === 'dark' ? 'system' : 'light'),
+    [theme],
+  )
+  const mobileThemeIsDark =
+    theme === 'dark' ||
+    (theme === 'system' &&
+      typeof document !== 'undefined' &&
+      document.documentElement.classList.contains('dark'))
+  const mobileThemeIcon = mobileThemeIsDark ? Moon02Icon : Sun02Icon
 
   const dismissMobileTip = useCallback(function dismissMobileTip() {
     setMobileTipDismissed(true)
@@ -744,137 +728,19 @@ export function DashboardScreen() {
     ],
   )
 
-  useEffect(() => {
-    mobileVisibleSectionIdsRef.current = mobileSections.map((section) => section.id)
-  }, [mobileSections])
+  const moveMobileSection = useCallback(
+    (fromVisibleIndex: number, toVisibleIndex: number) => {
+      const fromSection = mobileSections[fromVisibleIndex]
+      const toSection = mobileSections[toVisibleIndex]
+      if (!fromSection || !toSection || fromSection.id === toSection.id) return
 
-  const handleWidgetTouchStart = useCallback(
-    (
-      event: TouchEvent<HTMLButtonElement>,
-      visibleIndex: number,
-      sectionId: DashboardWidgetOrderId,
-    ) => {
-      if (!mobileEditMode) return
-      const touch = event.touches[0]
-      if (!touch) return
-      event.preventDefault()
-      event.stopPropagation()
+      const fromOrderIndex = widgetOrder.indexOf(fromSection.id)
+      const toOrderIndex = widgetOrder.indexOf(toSection.id)
+      if (fromOrderIndex === -1 || toOrderIndex === -1) return
 
-      const sectionEl = mobileItemRefs.current[sectionId]
-      const sectionHeight = sectionEl?.getBoundingClientRect().height ?? 84
-
-      setMobileDragState({
-        activeId: sectionId,
-        fromVisibleIndex: visibleIndex,
-        startY: touch.clientY,
-        currentY: touch.clientY,
-        targetVisibleIndex: visibleIndex,
-        itemHeight: sectionHeight,
-      })
+      moveWidget(fromOrderIndex, toOrderIndex)
     },
-    [mobileEditMode],
-  )
-
-  useEffect(() => {
-    if (!mobileEditMode || !mobileDragState) return
-
-    function handleTouchMove(event: globalThis.TouchEvent) {
-      const touch = event.touches[0]
-      if (!touch) return
-      event.preventDefault()
-
-      setMobileDragState((previous) => {
-        if (!previous) return previous
-        const sectionIds = mobileVisibleSectionIdsRef.current
-        if (sectionIds.length === 0) return previous
-
-        let nextTargetIndex = sectionIds.length - 1
-        for (let index = 0; index < sectionIds.length; index += 1) {
-          const id = sectionIds[index]
-          if (id === previous.activeId) continue
-          const sectionEl = mobileItemRefs.current[id]
-          if (!sectionEl) continue
-          const rect = sectionEl.getBoundingClientRect()
-          const midpoint = rect.top + rect.height / 2
-          if (touch.clientY < midpoint) {
-            nextTargetIndex = index
-            break
-          }
-        }
-
-        return {
-          ...previous,
-          currentY: touch.clientY,
-          targetVisibleIndex: Math.min(
-            sectionIds.length - 1,
-            Math.max(0, nextTargetIndex),
-          ),
-        }
-      })
-    }
-
-    function handleTouchEnd() {
-      setMobileDragState((previous) => {
-        if (!previous) return previous
-        const sectionIds = mobileVisibleSectionIdsRef.current
-        const fromId = sectionIds[previous.fromVisibleIndex]
-        const toId = sectionIds[previous.targetVisibleIndex]
-        if (!fromId || !toId || fromId === toId) return null
-
-        const nextOrder = widgetOrderRef.current
-        const fromOrderIndex = nextOrder.indexOf(fromId)
-        const toOrderIndex = nextOrder.indexOf(toId)
-        if (fromOrderIndex !== -1 && toOrderIndex !== -1) {
-          moveWidget(fromOrderIndex, toOrderIndex)
-        }
-        return null
-      })
-    }
-
-    window.addEventListener('touchmove', handleTouchMove, { passive: false })
-    window.addEventListener('touchend', handleTouchEnd)
-    window.addEventListener('touchcancel', handleTouchEnd)
-    return () => {
-      window.removeEventListener('touchmove', handleTouchMove)
-      window.removeEventListener('touchend', handleTouchEnd)
-      window.removeEventListener('touchcancel', handleTouchEnd)
-    }
-  }, [mobileDragState?.activeId, mobileEditMode, moveWidget])
-
-  const getMobileItemTranslateY = useCallback(
-    (visibleIndex: number) => {
-      if (!mobileDragState) return 0
-
-      const fromVisibleIndex = mobileDragState.fromVisibleIndex
-      const targetVisibleIndex = mobileDragState.targetVisibleIndex
-      const dragOffset = mobileDragState.currentY - mobileDragState.startY
-
-      if (visibleIndex === fromVisibleIndex) {
-        return dragOffset
-      }
-
-      const travelDistance =
-        Math.max(0, mobileDragState.itemHeight) + MOBILE_WIDGET_GAP_PX
-
-      if (
-        fromVisibleIndex < targetVisibleIndex &&
-        visibleIndex > fromVisibleIndex &&
-        visibleIndex <= targetVisibleIndex
-      ) {
-        return -travelDistance
-      }
-
-      if (
-        fromVisibleIndex > targetVisibleIndex &&
-        visibleIndex >= targetVisibleIndex &&
-        visibleIndex < fromVisibleIndex
-      ) {
-        return travelDistance
-      }
-
-      return 0
-    },
-    [mobileDragState],
+    [mobileSections, moveWidget, widgetOrder],
   )
 
   return (
@@ -949,31 +815,48 @@ export function DashboardScreen() {
                   </div>
                 )}
                 {isMobile && (
-                  <button
-                    type="button"
-                    onClick={() => setDashSettingsOpen(true)}
-                    className="inline-flex size-9 items-center justify-center rounded-full border border-primary-200 bg-primary-100/80 text-primary-600 shadow-sm transition-colors hover:bg-primary-50 active:scale-95"
-                    aria-label="Dashboard settings"
-                    title="Settings"
-                  >
-                    <HugeiconsIcon
-                      icon={Settings01Icon}
-                      size={18}
-                      strokeWidth={1.5}
-                    />
-                  </button>
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => updateSettings({ theme: nextTheme })}
+                      className="inline-flex size-8 items-center justify-center rounded-full border border-primary-200 bg-primary-100/80 text-primary-600 shadow-sm transition-colors hover:bg-primary-50 active:scale-95"
+                      aria-label={`Switch theme to ${nextTheme}`}
+                      title={`Theme: ${theme} (tap for ${nextTheme})`}
+                    >
+                      <HugeiconsIcon
+                        icon={mobileThemeIcon}
+                        size={16}
+                        strokeWidth={1.6}
+                      />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setDashSettingsOpen(true)}
+                      className="inline-flex size-8 items-center justify-center rounded-full border border-primary-200 bg-primary-100/80 text-primary-600 shadow-sm transition-colors hover:bg-primary-50 active:scale-95"
+                      aria-label="Dashboard settings"
+                      title="Settings"
+                    >
+                      <HugeiconsIcon
+                        icon={Settings01Icon}
+                        size={16}
+                        strokeWidth={1.5}
+                      />
+                    </button>
+                  </>
                 )}
               </div>
             </div>
-          </header>
 
-          <div className="px-4 py-2 md:hidden">
-            <p className="text-sm font-medium text-ink">Welcome back</p>
-            <p className="text-xs text-primary-400">
-              {systemStatus.totalSessions} sessions • {systemStatus.activeAgents}{' '}
-              agents • updated {greetingUpdatedText}
-            </p>
-          </div>
+            {isMobile ? (
+              <div className="mt-2 border-t border-primary-200/80 pt-2">
+                <p className="text-sm font-medium text-ink">Welcome back</p>
+                <p className="text-xs text-primary-400">
+                  {systemStatus.totalSessions} sessions • {systemStatus.activeAgents}{' '}
+                  agents • updated {greetingUpdatedText}
+                </p>
+              </div>
+            ) : null}
+          </header>
 
           {!mobileTipDismissed ? (
             <div className="mb-3 px-1 md:hidden">
@@ -1009,33 +892,24 @@ export function DashboardScreen() {
           ) : null}
 
           {/* Inline widget controls — belongs with the grid, not the header */}
-          <div className="mb-3 flex items-center justify-center gap-2 md:justify-end">
-            <AddWidgetPopover visibleIds={visibleIds} onAdd={addWidget} />
-            {isMobile ? (
-              <button
-                type="button"
-                onClick={() => setMobileEditMode((previous) => !previous)}
-                className={cn(
-                  'inline-flex min-h-11 items-center gap-1 rounded-lg border border-primary-200 bg-primary-50 px-3 py-2 text-[11px] text-primary-600 transition-colors md:min-h-0 md:px-2.5 md:py-1',
-                  mobileEditMode
-                    ? 'border-accent-200 text-accent-600'
-                    : 'hover:border-accent-200 hover:text-accent-600',
-                )}
-                aria-label={mobileEditMode ? 'Finish widget edit mode' : 'Edit widgets'}
-                title={mobileEditMode ? 'Done editing' : 'Edit widgets'}
-              >
-                <HugeiconsIcon icon={DragDropIcon} size={18} strokeWidth={1.6} />
-                <span>{mobileEditMode ? 'Done' : 'Edit'}</span>
-              </button>
-            ) : null}
+          <div className="mb-3 flex items-center justify-end gap-1.5 md:gap-2">
+            <AddWidgetPopover
+              visibleIds={visibleIds}
+              onAdd={addWidget}
+              buttonClassName={isMobile ? 'min-h-8 px-2 py-1 text-[10px]' : undefined}
+            />
             <button
               type="button"
               onClick={handleResetLayout}
-              className="inline-flex min-h-11 items-center gap-1 rounded-lg border border-primary-200 bg-primary-50 px-3 py-2 text-[11px] text-primary-600 transition-colors hover:border-accent-200 hover:text-accent-600 md:min-h-0 md:px-2.5 md:py-1 dark:border-gray-700 dark:bg-gray-800 dark:text-primary-400 dark:hover:border-accent-600 dark:hover:text-accent-400"
+              className="inline-flex min-h-8 items-center gap-1 rounded-lg border border-primary-200 bg-primary-50 px-2 py-1 text-[10px] text-primary-600 transition-colors hover:border-accent-200 hover:text-accent-600 md:min-h-0 md:px-2.5 md:py-1 md:text-[11px] dark:border-gray-700 dark:bg-gray-800 dark:text-primary-400 dark:hover:border-accent-600 dark:hover:text-accent-400"
               aria-label="Reset Layout"
               title="Reset Layout"
             >
-              <HugeiconsIcon icon={RefreshIcon} size={20} strokeWidth={1.5} />
+              <HugeiconsIcon
+                icon={RefreshIcon}
+                size={isMobile ? 16 : 20}
+                strokeWidth={1.5}
+              />
               <span>Reset</span>
             </button>
           </div>
@@ -1044,56 +918,49 @@ export function DashboardScreen() {
             {isMobile ? (
               <div className="space-y-3">
                 {mobileSections.map((section, visibleIndex) => {
-                  const isDragging = mobileDragState?.activeId === section.id
-                  const translateY = getMobileItemTranslateY(visibleIndex)
+                  const canMoveUp = visibleIndex > 0
+                  const canMoveDown = visibleIndex < mobileSections.length - 1
 
                   return (
-                    <motion.div
-                      key={section.id}
-                      layout
-                      animate={{ y: translateY, scale: isDragging ? 1.01 : 1 }}
-                      transition={{
-                        type: 'spring',
-                        stiffness: 420,
-                        damping: 36,
-                        mass: 0.5,
-                      }}
-                      className={cn(
-                        'w-full rounded-xl',
-                        mobileEditMode &&
-                          'border border-dashed border-primary-300/80 bg-primary-50/55 p-1.5',
-                        isDragging && 'z-20',
-                      )}
-                      style={{
-                        zIndex: isDragging ? 20 : 1,
-                        touchAction:
-                          mobileEditMode && isDragging ? 'none' : undefined,
-                      }}
-                      ref={(node) => {
-                        mobileItemRefs.current[section.id] = node
-                      }}
-                    >
-                      {mobileEditMode ? (
-                        <div className="mb-1 flex items-center justify-end px-1">
+                    <div key={section.id} className="relative w-full rounded-xl">
+                      <div className="absolute top-1 right-1 z-10 flex gap-0.5 rounded-full border border-primary-200/80 bg-primary-50/90 p-0.5 shadow-sm">
+                        {canMoveUp ? (
                           <button
                             type="button"
-                            onTouchStart={(event) =>
-                              handleWidgetTouchStart(event, visibleIndex, section.id)
+                            onClick={() =>
+                              moveMobileSection(visibleIndex, visibleIndex - 1)
                             }
-                            onMouseDown={(event) => {
-                              event.preventDefault()
-                            }}
-                            className="inline-flex touch-none items-center gap-1 rounded-full border border-primary-200 bg-primary-100/80 px-2 py-0.5 text-[10px] font-medium text-primary-600 active:scale-95"
-                            aria-label={`Drag ${section.label}`}
-                            title={`Drag ${section.label}`}
+                            className="inline-flex size-5 items-center justify-center rounded-full text-primary-400 transition-colors hover:text-primary-600"
+                            aria-label={`Move ${section.label} up`}
+                            title={`Move ${section.label} up`}
                           >
-                            <HugeiconsIcon icon={DragDropIcon} size={14} strokeWidth={1.6} />
-                            <span>Drag</span>
+                            <HugeiconsIcon
+                              icon={ArrowUp02Icon}
+                              size={12}
+                              strokeWidth={1.8}
+                            />
                           </button>
-                        </div>
-                      ) : null}
+                        ) : null}
+                        {canMoveDown ? (
+                          <button
+                            type="button"
+                            onClick={() =>
+                              moveMobileSection(visibleIndex, visibleIndex + 1)
+                            }
+                            className="inline-flex size-5 items-center justify-center rounded-full text-primary-400 transition-colors hover:text-primary-600"
+                            aria-label={`Move ${section.label} down`}
+                            title={`Move ${section.label} down`}
+                          >
+                            <HugeiconsIcon
+                              icon={ArrowDown01Icon}
+                              size={12}
+                              strokeWidth={1.8}
+                            />
+                          </button>
+                        ) : null}
+                      </div>
                       {section.content}
-                    </motion.div>
+                    </div>
                   )
                 })}
               </div>
