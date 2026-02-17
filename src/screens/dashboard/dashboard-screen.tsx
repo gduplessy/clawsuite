@@ -758,10 +758,11 @@ export function DashboardScreen() {
                   <button
                     type="button"
                     onClick={() => setOverflowOpen(true)}
-                    className="shrink-0 cursor-pointer rounded-xl transition-transform active:scale-95"
+                    className="relative shrink-0 cursor-pointer rounded-xl transition-transform active:scale-95"
                     aria-label="Open quick menu"
                   >
-                    <OpenClawStudioIcon className="size-8 rounded-xl shadow-sm" />
+                    <OpenClawStudioIcon className="size-9 rounded-xl shadow-sm" />
+                    <span className="absolute -right-0.5 -bottom-0.5 flex size-3.5 items-center justify-center rounded-full bg-accent-500 text-[7px] font-bold text-white shadow-sm">≡</span>
                   </button>
                 ) : (
                   <OpenClawStudioIcon className="size-8 shrink-0 rounded-xl shadow-sm" />
@@ -898,12 +899,25 @@ export function DashboardScreen() {
           <div className="mb-3 flex items-center justify-end gap-1 md:gap-2">
             {isMobile ? (
               <>
-                <AddWidgetPopover
-                  visibleIds={visibleIds}
-                  onAdd={addWidget}
-                  compact
-                  buttonClassName="size-8 !px-0 !py-0 justify-center rounded-full border border-primary-200 bg-primary-50 text-primary-500"
-                />
+                {mobileEditMode ? (
+                  <>
+                    <AddWidgetPopover
+                      visibleIds={visibleIds}
+                      onAdd={addWidget}
+                      compact
+                      buttonClassName="size-8 !px-0 !py-0 justify-center rounded-full border border-primary-200 bg-primary-50 text-primary-500"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleResetLayout}
+                      className="inline-flex size-8 items-center justify-center rounded-full border border-primary-200 bg-primary-50 text-primary-500 transition-colors hover:text-primary-700"
+                      aria-label="Reset Layout"
+                      title="Reset Layout"
+                    >
+                      <HugeiconsIcon icon={RefreshIcon} size={14} strokeWidth={1.5} />
+                    </button>
+                  </>
+                ) : null}
                 <button
                   type="button"
                   onClick={() => setMobileEditMode((p) => !p)}
@@ -918,17 +932,6 @@ export function DashboardScreen() {
                 >
                   <HugeiconsIcon icon={PencilEdit02Icon} size={14} strokeWidth={1.6} />
                 </button>
-                {mobileEditMode ? (
-                  <button
-                    type="button"
-                    onClick={handleResetLayout}
-                    className="inline-flex size-8 items-center justify-center rounded-full border border-primary-200 bg-primary-50 text-primary-500 transition-colors hover:text-primary-700"
-                    aria-label="Reset Layout"
-                    title="Reset Layout"
-                  >
-                    <HugeiconsIcon icon={RefreshIcon} size={14} strokeWidth={1.5} />
-                  </button>
-                ) : null}
               </>
             ) : (
               <>
