@@ -57,7 +57,7 @@ export function WorkspaceShell() {
   const [creatingSession, setCreatingSession] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
 
-  // Fetch actual auth status from server instead of hardcoding (PR #26)
+  // Fetch actual auth status from server instead of hardcoding
   interface AuthStatus {
     authenticated: boolean
     authRequired: boolean
