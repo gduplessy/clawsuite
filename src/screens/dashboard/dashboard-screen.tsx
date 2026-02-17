@@ -2,6 +2,7 @@ import {
   ArrowDown01Icon,
   ArrowUp02Icon,
   Moon02Icon,
+  PencilEdit02Icon,
   RefreshIcon,
   Settings01Icon,
   Sun02Icon,
@@ -238,6 +239,7 @@ export function DashboardScreen() {
   const containerRef = useRef<HTMLDivElement>(null)
   const [containerWidth, setContainerWidth] = useState<number | null>(null)
   const [isMobile, setIsMobile] = useState(false)
+  const [mobileEditMode, setMobileEditMode] = useState(false)
   const [nowMs, setNowMs] = useState(() => Date.now())
   const [mobileTipDismissed, setMobileTipDismissed] = useState(() => {
     if (typeof window === 'undefined') return false
@@ -287,6 +289,7 @@ export function DashboardScreen() {
     setGridLayouts(fresh)
     resetVisible()
     resetOrder()
+    setMobileEditMode(false)
   }, [resetOrder, resetVisible])
 
   const sessionsQuery = useQuery({
@@ -891,27 +894,54 @@ export function DashboardScreen() {
             />
           ) : null}
 
-          {/* Inline widget controls — belongs with the grid, not the header */}
-          <div className="mb-3 flex items-center justify-end gap-1.5 md:gap-2">
-            <AddWidgetPopover
-              visibleIds={visibleIds}
-              onAdd={addWidget}
-              buttonClassName={isMobile ? 'min-h-8 px-2 py-1 text-[10px]' : undefined}
-            />
-            <button
-              type="button"
-              onClick={handleResetLayout}
-              className="inline-flex min-h-8 items-center gap-1 rounded-lg border border-primary-200 bg-primary-50 px-2 py-1 text-[10px] text-primary-600 transition-colors hover:border-accent-200 hover:text-accent-600 md:min-h-0 md:px-2.5 md:py-1 md:text-[11px] dark:border-gray-700 dark:bg-gray-800 dark:text-primary-400 dark:hover:border-accent-600 dark:hover:text-accent-400"
-              aria-label="Reset Layout"
-              title="Reset Layout"
-            >
-              <HugeiconsIcon
-                icon={RefreshIcon}
-                size={isMobile ? 16 : 20}
-                strokeWidth={1.5}
-              />
-              <span>Reset</span>
-            </button>
+          {/* Inline widget controls — icon-only on mobile */}
+          <div className="mb-3 flex items-center justify-end gap-1 md:gap-2">
+            {isMobile ? (
+              <>
+                <AddWidgetPopover
+                  visibleIds={visibleIds}
+                  onAdd={addWidget}
+                  buttonClassName="size-8 !px-0 !py-0 justify-center rounded-full border border-primary-200 bg-primary-50 text-primary-500"
+                />
+                <button
+                  type="button"
+                  onClick={() => setMobileEditMode((p) => !p)}
+                  className={cn(
+                    'inline-flex size-8 items-center justify-center rounded-full border transition-colors',
+                    mobileEditMode
+                      ? 'border-accent-300 bg-accent-50 text-accent-600'
+                      : 'border-primary-200 bg-primary-50 text-primary-500 hover:text-primary-700',
+                  )}
+                  aria-label={mobileEditMode ? 'Done editing' : 'Edit layout'}
+                  title={mobileEditMode ? 'Done editing' : 'Edit layout'}
+                >
+                  <HugeiconsIcon icon={PencilEdit02Icon} size={14} strokeWidth={1.6} />
+                </button>
+                <button
+                  type="button"
+                  onClick={handleResetLayout}
+                  className="inline-flex size-8 items-center justify-center rounded-full border border-primary-200 bg-primary-50 text-primary-500 transition-colors hover:text-primary-700"
+                  aria-label="Reset Layout"
+                  title="Reset Layout"
+                >
+                  <HugeiconsIcon icon={RefreshIcon} size={14} strokeWidth={1.5} />
+                </button>
+              </>
+            ) : (
+              <>
+                <AddWidgetPopover visibleIds={visibleIds} onAdd={addWidget} />
+                <button
+                  type="button"
+                  onClick={handleResetLayout}
+                  className="inline-flex items-center gap-1 rounded-lg border border-primary-200 bg-primary-50 px-2.5 py-1 text-[11px] text-primary-600 transition-colors hover:border-accent-200 hover:text-accent-600 dark:border-gray-700 dark:bg-gray-800 dark:text-primary-400 dark:hover:border-accent-600 dark:hover:text-accent-400"
+                  aria-label="Reset Layout"
+                  title="Reset Layout"
+                >
+                  <HugeiconsIcon icon={RefreshIcon} size={20} strokeWidth={1.5} />
+                  <span>Reset</span>
+                </button>
+              </>
+            )}
           </div>
 
           <div ref={containerRef}>
@@ -923,6 +953,7 @@ export function DashboardScreen() {
 
                   return (
                     <div key={section.id} className="relative w-full rounded-xl">
+                      {mobileEditMode ? (
                       <div className="absolute top-1 right-1 z-10 flex gap-0.5 rounded-full border border-primary-200/80 bg-primary-50/90 p-0.5 shadow-sm">
                         {canMoveUp ? (
                           <button
@@ -959,6 +990,7 @@ export function DashboardScreen() {
                           </button>
                         ) : null}
                       </div>
+                      ) : null}
                       {section.content}
                     </div>
                   )
