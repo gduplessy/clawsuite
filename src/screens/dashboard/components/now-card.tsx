@@ -73,6 +73,16 @@ async function fetchNowCardActivity(): Promise<{
   }
 }
 
+/** Sanitize event detail — strip raw JSON payloads that leak from gateway */
+function sanitizeDetail(text: string): string {
+  const trimmed = text.trim()
+  // If it looks like raw JSON, don't show it
+  if (trimmed.startsWith('{') || trimmed.startsWith('[')) return ''
+  // Truncate overly long details
+  if (trimmed.length > 120) return `${trimmed.slice(0, 117)}…`
+  return trimmed
+}
+
 function toRelativeTime(timestamp: number): string {
   const diffMs = Math.max(0, Date.now() - timestamp)
   const seconds = Math.floor(diffMs / 1000)
@@ -156,7 +166,7 @@ export function NowCard({
 
       <p className="mt-2 line-clamp-1 text-sm font-medium text-ink">
         {latestEvent
-          ? `${latestEvent.detail ?? latestEvent.title} • ${toRelativeTime(latestEvent.timestamp)}`
+          ? `${sanitizeDetail(latestEvent.detail ?? '') || latestEvent.title} • ${toRelativeTime(latestEvent.timestamp)}`
           : 'No recent activity yet'}
       </p>
 

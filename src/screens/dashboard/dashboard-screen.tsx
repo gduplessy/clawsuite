@@ -828,6 +828,39 @@ export function DashboardScreen() {
                 )}
                 {isMobile && (
                   <>
+                    {mobileEditMode ? (
+                      <>
+                        <AddWidgetPopover
+                          visibleIds={visibleIds}
+                          onAdd={addWidget}
+                          compact
+                          buttonClassName="size-8 !px-0 !py-0 justify-center rounded-full border border-primary-200 bg-primary-100/80 text-primary-500 shadow-sm"
+                        />
+                        <button
+                          type="button"
+                          onClick={handleResetLayout}
+                          className="inline-flex size-8 items-center justify-center rounded-full border border-primary-200 bg-primary-100/80 text-primary-500 shadow-sm transition-colors hover:text-primary-700 active:scale-95"
+                          aria-label="Reset Layout"
+                          title="Reset Layout"
+                        >
+                          <HugeiconsIcon icon={RefreshIcon} size={14} strokeWidth={1.5} />
+                        </button>
+                      </>
+                    ) : null}
+                    <button
+                      type="button"
+                      onClick={() => setMobileEditMode((p) => !p)}
+                      className={cn(
+                        'inline-flex size-8 items-center justify-center rounded-full border shadow-sm transition-colors active:scale-95',
+                        mobileEditMode
+                          ? 'border-accent-300 bg-accent-50 text-accent-600'
+                          : 'border-primary-200 bg-primary-100/80 text-primary-500 hover:text-primary-700',
+                      )}
+                      aria-label={mobileEditMode ? 'Done editing' : 'Edit layout'}
+                      title={mobileEditMode ? 'Done editing' : 'Edit layout'}
+                    >
+                      <HugeiconsIcon icon={PencilEdit02Icon} size={14} strokeWidth={1.6} />
+                    </button>
                     <button
                       type="button"
                       onClick={() => updateSettings({ theme: nextTheme })}
@@ -887,60 +920,22 @@ export function DashboardScreen() {
             />
           ) : null}
 
-          {/* Inline widget controls — icon-only on mobile */}
-          <div className="mb-2 flex items-center justify-end gap-1 md:mb-3 md:gap-2">
-            {isMobile ? (
-              <>
-                {mobileEditMode ? (
-                  <>
-                    <AddWidgetPopover
-                      visibleIds={visibleIds}
-                      onAdd={addWidget}
-                      compact
-                      buttonClassName="size-8 !px-0 !py-0 justify-center rounded-full border border-primary-200 bg-primary-50 text-primary-500"
-                    />
-                    <button
-                      type="button"
-                      onClick={handleResetLayout}
-                      className="inline-flex size-8 items-center justify-center rounded-full border border-primary-200 bg-primary-50 text-primary-500 transition-colors hover:text-primary-700"
-                      aria-label="Reset Layout"
-                      title="Reset Layout"
-                    >
-                      <HugeiconsIcon icon={RefreshIcon} size={14} strokeWidth={1.5} />
-                    </button>
-                  </>
-                ) : null}
-                <button
-                  type="button"
-                  onClick={() => setMobileEditMode((p) => !p)}
-                  className={cn(
-                    'inline-flex size-8 items-center justify-center rounded-full border transition-colors',
-                    mobileEditMode
-                      ? 'border-accent-300 bg-accent-50 text-accent-600'
-                      : 'border-primary-200 bg-primary-50 text-primary-500 hover:text-primary-700',
-                  )}
-                  aria-label={mobileEditMode ? 'Done editing' : 'Edit layout'}
-                  title={mobileEditMode ? 'Done editing' : 'Edit layout'}
-                >
-                  <HugeiconsIcon icon={PencilEdit02Icon} size={14} strokeWidth={1.6} />
-                </button>
-              </>
-            ) : (
-              <>
-                <AddWidgetPopover visibleIds={visibleIds} onAdd={addWidget} />
-                <button
-                  type="button"
-                  onClick={handleResetLayout}
-                  className="inline-flex items-center gap-1 rounded-lg border border-primary-200 bg-primary-50 px-2.5 py-1 text-[11px] text-primary-600 transition-colors hover:border-accent-200 hover:text-accent-600 dark:border-gray-700 dark:bg-gray-800 dark:text-primary-400 dark:hover:border-accent-600 dark:hover:text-accent-400"
-                  aria-label="Reset Layout"
-                  title="Reset Layout"
-                >
-                  <HugeiconsIcon icon={RefreshIcon} size={20} strokeWidth={1.5} />
-                  <span>Reset</span>
-                </button>
-              </>
-            )}
-          </div>
+          {/* Inline widget controls — desktop only (mobile controls are in header) */}
+          {!isMobile && (
+            <div className="mb-3 flex items-center justify-end gap-2">
+              <AddWidgetPopover visibleIds={visibleIds} onAdd={addWidget} />
+              <button
+                type="button"
+                onClick={handleResetLayout}
+                className="inline-flex items-center gap-1 rounded-lg border border-primary-200 bg-primary-50 px-2.5 py-1 text-[11px] text-primary-600 transition-colors hover:border-accent-200 hover:text-accent-600 dark:border-gray-700 dark:bg-gray-800 dark:text-primary-400 dark:hover:border-accent-600 dark:hover:text-accent-400"
+                aria-label="Reset Layout"
+                title="Reset Layout"
+              >
+                <HugeiconsIcon icon={RefreshIcon} size={20} strokeWidth={1.5} />
+                <span>Reset</span>
+              </button>
+            </div>
+          )}
 
           <div ref={containerRef}>
             {isMobile ? (
