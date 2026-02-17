@@ -758,11 +758,10 @@ export function DashboardScreen() {
                   <button
                     type="button"
                     onClick={() => setOverflowOpen(true)}
-                    className="relative shrink-0 cursor-pointer rounded-xl transition-transform active:scale-95"
+                    className="shrink-0 cursor-pointer rounded-xl transition-transform active:scale-95"
                     aria-label="Open quick menu"
                   >
-                    <OpenClawStudioIcon className="size-9 rounded-xl shadow-sm" />
-                    <span className="absolute -right-0.5 -bottom-0.5 flex size-3.5 items-center justify-center rounded-full bg-accent-500 text-[7px] font-bold text-white shadow-sm">≡</span>
+                    <OpenClawStudioIcon className="size-8 rounded-xl shadow-sm" />
                   </button>
                 ) : (
                   <OpenClawStudioIcon className="size-8 shrink-0 rounded-xl shadow-sm" />
@@ -852,32 +851,15 @@ export function DashboardScreen() {
             </div>
 
             {isMobile ? (
-              <div className="mt-2 border-t border-primary-200/80 pt-2">
-                <p className="text-sm font-medium text-ink">Welcome back</p>
-                <p className="text-xs text-primary-400">
+              <div className="mt-1.5 border-t border-primary-200/60 pt-1.5">
+                <p className="text-[13px] font-medium text-ink">Welcome back</p>
+                <p className="text-[11px] text-primary-400">
                   {systemStatus.totalSessions} sessions • {systemStatus.activeAgents}{' '}
                   agents • updated {greetingUpdatedText}
                 </p>
               </div>
             ) : null}
           </header>
-
-          {!mobileTipDismissed ? (
-            <div className="mb-3 px-1 md:hidden">
-              <div className="flex items-center gap-2 rounded-full border border-primary-200 bg-primary-50/90 px-3 py-1.5 text-[11px] shadow-sm">
-                <span className="line-clamp-1 text-primary-600">
-                  Tip: Live system updates are available in Activity.
-                </span>
-                <button
-                  type="button"
-                  onClick={dismissMobileTip}
-                  className="ml-auto shrink-0 rounded-full border border-primary-200 bg-primary-100/80 px-2 py-0.5 text-[10px] font-medium text-primary-600 transition-colors hover:bg-primary-100"
-                >
-                  Dismiss
-                </button>
-              </div>
-            </div>
-          ) : null}
 
           {/* Activity ticker — keep full banner behavior on desktop */}
           <div className="hidden md:block">
@@ -896,7 +878,7 @@ export function DashboardScreen() {
           ) : null}
 
           {/* Inline widget controls — icon-only on mobile */}
-          <div className="mb-3 flex items-center justify-end gap-1 md:gap-2">
+          <div className="mb-2 flex items-center justify-end gap-1 md:mb-3 md:gap-2">
             {isMobile ? (
               <>
                 {mobileEditMode ? (
